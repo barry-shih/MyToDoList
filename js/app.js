@@ -487,10 +487,15 @@ class App {
                 const desc = document.getElementById('list-desc-input').value;
                 const user = this.currentUser || { uid: 'guest', displayName: '訪客', photoURL: 'https://api.dicebear.com/7.x/bottts/svg?seed=guest' };
 
-                const newId = await dbManager.createList({ title, description: desc }, user);
-                this.listForm.reset();
-                this.listModal.classList.add('hidden');
-                this.showToast(`已建立新清單「${title}」`, 'success');
+                try {
+                    const newId = await dbManager.createList({ title, description: desc }, user);
+                    this.listForm.reset();
+                    this.listModal.classList.add('hidden');
+                    this.showToast(`已建立新清單「${title}」`, 'success');
+                } catch (err) {
+                    console.error("建立清單失敗:", err);
+                    this.handlePermissionError(err);
+                }
             };
         }
 
@@ -532,13 +537,18 @@ class App {
                 }
 
                 const user = this.currentUser || { uid: 'guest', displayName: '訪客', photoURL: 'https://api.dicebear.com/7.x/bottts/svg?seed=guest' };
-                await dbManager.addTask(this.currentList.id, {
-                    title, description, priority, category, dueDate, assignee
-                }, user);
+                try {
+                    await dbManager.addTask(this.currentList.id, {
+                        title, description, priority, category, dueDate, assignee
+                    }, user);
 
-                this.taskForm.reset();
-                this.taskModal.classList.add('hidden');
-                this.showToast('已新增任務並即時同步給所有成員！', 'success');
+                    this.taskForm.reset();
+                    this.taskModal.classList.add('hidden');
+                    this.showToast('已新增任務並即時同步給所有成員！', 'success');
+                } catch (err) {
+                    console.error("新增任務失敗:", err);
+                    this.handlePermissionError(err);
+                }
             };
         }
 
@@ -604,6 +614,14 @@ class App {
             opt.textContent = `${m.displayName}${m.uid === this.currentUser?.uid ? ' (我自己)' : ''}`;
             select.appendChild(opt);
         });
+    }
+
+    handlePermissionError(err) {
+        if (err?.code === 'permission-denied' || String(err?.message || '').includes('insufficient permissions')) {
+            alert('【Firebase 資料庫安全性規則權限不足提示】\n\n您的 Firestore 資料庫尚未發布開放讀寫的安全性規則。\n請至 Firebase 控制台 -> Firestore Database -> 「規則 (Rules)」分頁，將規則改為允許讀寫後點擊「發布 (Publish)」即可正常運作！');
+        } else {
+            this.showToast(`操作失敗: ${err?.message || '未知錯誤'}`, 'error');
+        }
     }
 
     showToast(message, type = 'info') {

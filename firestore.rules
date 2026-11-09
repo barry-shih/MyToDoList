@@ -1,28 +1,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // 協作待辦清單 (Lists)
-    match /lists/{listId} {
-      // 只要是已登入的使用者皆可讀取與建立清單
-      allow read, write: if request.auth != null;
-    }
-
-    // 協作任務 (Tasks)
-    match /tasks/{taskId} {
-      // 支援已登入成員即時讀取、建立、更新勾選與指派
-      allow read, write: if request.auth != null;
-    }
-
-    // 活動日誌 (Activities)
-    match /activities/{activityId} {
-      allow read, create: if request.auth != null;
-      allow update, delete: if false; // 活動紀錄不允許隨意修改或刪除
-    }
-
-    // 即時在線狀態 (Presence)
-    match /presence/{docId} {
-      allow read, write: if request.auth != null;
+    // 開發與協作模式：允許所有人讀寫所有待辦清單、任務、活動日誌與在線狀態
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }
