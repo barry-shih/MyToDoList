@@ -45,18 +45,16 @@
                     </div>
                     <div class="flex items-center gap-2 text-xs text-slate-500">
                         <span>專案: <code class="text-indigo-600 font-mono">my-to-do-list-1e32d</code></span>
-                        <span id="config-status-badge"></span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-800">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            雲端已連線
+                        </span>
                     </div>
                 </div>
             </div>
 
-            <!-- 右側操作按鈕區 (Firebase 設定、登入/登出、個人資訊) -->
+            <!-- 右側操作按鈕區 (登入/登出、個人資訊) -->
             <div class="flex items-center gap-3">
-                <!-- 設定按鈕 -->
-                <button id="open-config-btn" class="p-2 rounded-xl text-slate-600 hover:text-indigo-600 hover:bg-slate-100 transition-colors" title="Firebase 專案與 API Key 設定">
-                    <i class="fa-solid fa-gear text-base"></i>
-                </button>
-
                 <!-- 未登入狀態按鈕組 -->
                 <div id="auth-btn-container" class="flex items-center gap-2">
                     <button id="guest-login-btn" class="px-3 py-1.5 rounded-xl text-xs font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors shadow-sm">
@@ -237,7 +235,7 @@
                     <p class="text-xs text-indigo-100 leading-relaxed">
                         1. 點擊「邀請協作」複製專屬網址，傳給夥伴即可共同查看與編輯。<br>
                         2. 任何成員打勾、指派或修改任務，所有人的螢幕會同步更新。<br>
-                        3. 如尚未設定 Firebase API Key，目前本機所有分頁亦能即時多工體驗！
+                        3. 支援 Google 帳號授權，雲端即時雙向連線。
                     </p>
                 </div>
             </div>
@@ -251,7 +249,7 @@
     </footer>
 
     <!-- ============================================================
-         彈窗 1: 新增 / 編輯任務 Modal
+         彈窗 1: 新增任務 Modal
          ============================================================ -->
     <div id="task-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl modal-enter border border-slate-100">
@@ -322,7 +320,7 @@
     </div>
 
     <!-- ============================================================
-         彈窗 2: 新增清單 (New List / Board) Modal
+         彈窗 2: 新增清單 Modal
          ============================================================ -->
     <div id="list-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl modal-enter border border-slate-100">
@@ -350,74 +348,6 @@
                 <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                     <button type="button" class="close-modal-btn px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors">取消</button>
                     <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-md shadow-indigo-200 transition-all">建立清單</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- ============================================================
-         彈窗 3: Firebase 專案設定精靈 (Firebase Configuration Modal)
-         ============================================================ -->
-    <div id="config-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl modal-enter border border-slate-100 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
-                        <i class="fa-solid fa-fire text-base"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-base font-bold text-slate-900">Firebase 專案連線設定</h3>
-                        <p class="text-xs text-slate-500">專案：<span class="font-mono text-indigo-600 font-semibold">my-to-do-list-1e32d</span></p>
-                    </div>
-                </div>
-                <button type="button" class="close-modal-btn text-slate-400 hover:text-slate-600 p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <!-- 引導說明卡 -->
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-600 mb-4 space-y-1.5 leading-relaxed">
-                <p class="font-bold text-slate-800">📌 如何取得您的 Firebase Web API Key？</p>
-                <ol class="list-decimal list-inside space-y-1 text-slate-600">
-                    <li>前往 <a href="https://console.firebase.google.com/project/my-to-do-list-1e32d/settings/general" target="_blank" class="text-indigo-600 underline font-semibold">Firebase 控制台 (專案設定)</a></li>
-                    <li>在「您的應用程式」中點選「新增應用程式」並選擇網頁圖示 (<code class="text-slate-700">&lt;/&gt;</code>) 註冊應用程式。</li>
-                    <li>複製 Firebase SDK snippet 中的 <code class="font-mono bg-white px-1 py-0.5 rounded border">apiKey</code> 與 <code class="font-mono bg-white px-1 py-0.5 rounded border">appId</code> 填入下方即可！</li>
-                </ol>
-            </div>
-
-            <form id="config-form" class="space-y-3.5 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Web API Key *</label>
-                    <input id="cfg-api-key" type="text" required placeholder="AIzaSy..." class="w-full font-mono px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Project ID</label>
-                    <input id="cfg-project-id" type="text" value="my-to-do-list-1e32d" readonly class="w-full font-mono px-3 py-2 text-xs bg-slate-100 border border-slate-200 rounded-xl text-slate-500 cursor-not-allowed">
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Auth Domain</label>
-                        <input id="cfg-auth-domain" type="text" value="my-to-do-list-1e32d.firebaseapp.com" class="w-full font-mono px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Storage Bucket</label>
-                        <input id="cfg-storage-bucket" type="text" value="my-to-do-list-1e32d.firebasestorage.app" class="w-full font-mono px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">App ID (選填)</label>
-                    <input id="cfg-app-id" type="text" placeholder="1:xxxx:web:xxxx" class="w-full font-mono px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-
-                <div class="flex items-center justify-between pt-3 border-t border-slate-100">
-                    <button type="button" id="reset-config-btn" class="text-rose-600 hover:text-rose-700 hover:underline">還原預設</button>
-                    <div class="flex items-center gap-2">
-                        <button type="button" class="close-modal-btn px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors">取消</button>
-                        <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-md shadow-indigo-200 transition-all">儲存並連線</button>
-                    </div>
                 </div>
             </form>
         </div>

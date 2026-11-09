@@ -5,9 +5,7 @@ import {
     GoogleAuthProvider, 
     signInWithPopup, 
     signOut, 
-    onAuthStateChanged,
-    browserLocalPersistence,
-    setPersistence
+    onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { 
     getFirestore, 
@@ -28,45 +26,25 @@ import {
     arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// 預設專案資訊 (my-to-do-list-1e32d)
-export const DEFAULT_FIREBASE_CONFIG = {
-    apiKey: "", // 請在介面設定或在此填入 Firebase Web API Key
+// 正式環境 Firebase 專案設定 (my-to-do-list-1e32d)
+export const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBnbJVxqBa_XXO96ChMqB8AVyrdcP0V3Ms",
     authDomain: "my-to-do-list-1e32d.firebaseapp.com",
     projectId: "my-to-do-list-1e32d",
     storageBucket: "my-to-do-list-1e32d.firebasestorage.app",
-    messagingSenderId: "",
-    appId: ""
+    messagingSenderId: "301601692855",
+    appId: "1:301601692855:web:47f340ca42a5321e674132",
+    measurementId: "G-R2QEVEZGMH"
 };
 
-const STORAGE_KEY = "mytodolist_firebase_config_v1";
-
-// 取得當前設定 (優先取 localStorage，無則使用預設)
+// 取得當前設定
 export function getFirebaseConfig() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            return { ...DEFAULT_FIREBASE_CONFIG, ...parsed };
-        } catch (e) {
-            console.error("無法解析已儲存的 Firebase 設定:", e);
-        }
-    }
-    return { ...DEFAULT_FIREBASE_CONFIG };
+    return FIREBASE_CONFIG;
 }
 
-// 儲存設定到 localStorage
-export function saveFirebaseConfig(cfg) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
-}
-
-// 重設為預設
-export function resetFirebaseConfig() {
-    localStorage.removeItem(STORAGE_KEY);
-}
-
-// 判斷是否具備有效的 API Key
-export function isConfigReady(config = getFirebaseConfig()) {
-    return Boolean(config.apiKey && config.apiKey.trim().length > 10 && config.projectId);
+// 判斷是否具備有效的 API Key (永遠為 true)
+export function isConfigReady() {
+    return true;
 }
 
 // 執行個體變數
@@ -77,16 +55,9 @@ export let googleProvider = null;
 
 // 初始化 Firebase 實體
 export function initFirebase() {
-    const config = getFirebaseConfig();
-
-    if (!isConfigReady(config)) {
-        console.warn("⚠️ Firebase 尚未設定有效的 API Key，部分即時雲端同步功能暫不可用。請在設定中填入。");
-        return { ready: false, config };
-    }
-
     try {
         if (!getApps().length) {
-            app = initializeApp(config);
+            app = initializeApp(FIREBASE_CONFIG);
         } else {
             app = getApp();
         }
@@ -96,10 +67,10 @@ export function initFirebase() {
         googleProvider = new GoogleAuthProvider();
         googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-        return { ready: true, app, auth, db, googleProvider, config };
+        return { ready: true, app, auth, db, googleProvider, config: FIREBASE_CONFIG };
     } catch (err) {
         console.error("Firebase 初始化失敗:", err);
-        return { ready: false, error: err, config };
+        return { ready: false, error: err, config: FIREBASE_CONFIG };
     }
 }
 

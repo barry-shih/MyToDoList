@@ -1,11 +1,5 @@
 // 主應用邏輯與 UI 互動控制器
-import { 
-    initFirebase, 
-    getFirebaseConfig, 
-    saveFirebaseConfig, 
-    resetFirebaseConfig, 
-    isConfigReady 
-} from "./firebase-config.js";
+import { initFirebase } from "./firebase-config.js";
 import { authManager } from "./auth.js";
 import { dbManager } from "./db.js";
 
@@ -34,7 +28,6 @@ class App {
         this.userAvatarEl = document.getElementById('user-avatar');
         this.userNameEl = document.getElementById('user-name');
         this.userEmailEl = document.getElementById('user-email');
-        this.configStatusBadge = document.getElementById('config-status-badge');
 
         // 看板清單選擇區
         this.listsDropdown = document.getElementById('lists-dropdown');
@@ -65,57 +58,26 @@ class App {
         this.taskForm = document.getElementById('task-form');
         this.listModal = document.getElementById('list-modal');
         this.listForm = document.getElementById('list-form');
-        this.configModal = document.getElementById('config-modal');
-        this.configForm = document.getElementById('config-form');
 
         // 提示容器
         this.toastContainer = document.getElementById('toast-container');
     }
 
     start() {
-        // 1. 初始化 Firebase
-        const initResult = initFirebase();
-        this.updateConfigStatus(initResult.ready);
+        // 1. 初始化 Firebase (正式設定已固定載入)
+        initFirebase();
 
         // 2. 初始化認證監聽
         authManager.subscribe((user) => {
             this.currentUser = user;
             this.renderAuthUI();
-            if (user) {
-                this.loadUserData();
-            } else {
-                // 未登入時提供遊客體驗或引導登入
-                this.renderGuestNotice();
-            }
+            this.loadUserData();
         });
         authManager.init();
 
         // 3. 檢查網址參數是否帶有 listId (協作分享連結)
         const urlParams = new URLSearchParams(window.location.search);
         this.urlListId = urlParams.get('listId');
-    }
-
-    updateConfigStatus(isReady) {
-        if (!this.configStatusBadge) return;
-        if (isReady) {
-            this.configStatusBadge.innerHTML = `
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Firebase 雲端已連線
-                </span>
-            `;
-        } else {
-            this.configStatusBadge.innerHTML = `
-                <button id="open-config-banner-btn" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                    填入 API Key 啟用雲端
-                </button>
-            `;
-            const bannerBtn = document.getElementById('open-config-banner-btn');
-            if (bannerBtn) {
-                bannerBtn.onclick = () => this.openConfigModal();
-            }
-        }
     }
 
     renderAuthUI() {
@@ -129,11 +91,6 @@ class App {
             this.authBtnContainer.classList.remove('hidden');
             this.userProfileEl.classList.add('hidden');
         }
-    }
-
-    renderGuestNotice() {
-        // 如果使用者尚未登入，且還沒清單，預設載入示範資料
-        this.loadUserData();
     }
 
     loadUserData() {
@@ -245,7 +202,6 @@ class App {
         this.collaboratorsStack.innerHTML = '';
 
         const members = this.currentList?.members || [];
-        // 合併在線標記
         members.forEach(member => {
             const isOnline = this.onlineUsers.some(u => u.uid === member.uid);
             const avatarWrap = document.createElement('div');
@@ -386,7 +342,7 @@ class App {
                         </div>
                     </div>
 
-                    <!-- 操作選單 (編輯、刪除) -->
+                    <!-- 操作選單 (刪除) -->
                     <div class="flex items-center gap-1 flex-shrink-0">
                         <button type="button" class="delete-task-btn p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" data-id="${task.id}" data-title="${encodeURIComponent(task.title)}" title="刪除任務">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -476,11 +432,8 @@ class App {
                     await authManager.loginWithGoogle();
                     this.showToast('Google 登入成功！歡迎回來', 'success');
                 } catch (err) {
-                    if (err.message === 'CONFIG_NOT_READY') {
-                        this.openConfigModal();
-                        this.showToast('請先填入 Firebase API Key 即可開啟 Google 登入', 'warning');
-                    } else if (err.message === 'UNAUTHORIZED_DOMAIN') {
-                        alert('【Firebase 授權網域提示】\n您的 Firebase 專案尚未將此網域 (如 localhost 或目前主機) 加入授權清單。\n\n請前往 Firebase Console -> Authentication -> Settings -> Authorized domains 加入當前網址。');
+                    if (err.message === 'UNAUTHORIZED_DOMAIN') {
+                        alert('【Firebase 授權網域提示】\n您的 Firebase 專案尚未將目前網域加入授權清單。\n\n請前往 Firebase Console -> Authentication -> Settings -> Authorized domains 加入當前網址 (例如 localhost 或 barry-shih.github.io)。');
                     } else if (err.message === 'GOOGLE_PROVIDER_DISABLED') {
                         alert('【Google 登入提供者未啟用】\n請前往 Firebase 控制台 -> Authentication -> Sign-in method，將「Google」啟用並儲存。');
                     } else if (err.message !== 'POPUP_CLOSED') {
@@ -585,7 +538,7 @@ class App {
 
                 this.taskForm.reset();
                 this.taskModal.classList.add('hidden');
-                this.showToast('已新增任務並同步給所有成員！', 'success');
+                this.showToast('已新增任務並即時同步給所有成員！', 'success');
             };
         }
 
@@ -631,49 +584,11 @@ class App {
             };
         }
 
-        // Firebase 設定按鈕
-        const openConfigBtn = document.getElementById('open-config-btn');
-        if (openConfigBtn) {
-            openConfigBtn.onclick = () => this.openConfigModal();
-        }
-
-        // Firebase 設定表單
-        if (this.configForm) {
-            this.configForm.onsubmit = (e) => {
-                e.preventDefault();
-                const apiKey = document.getElementById('cfg-api-key').value.trim();
-                const projectId = document.getElementById('cfg-project-id').value.trim() || 'my-to-do-list-1e32d';
-                const authDomain = document.getElementById('cfg-auth-domain').value.trim() || `${projectId}.firebaseapp.com`;
-                const storageBucket = document.getElementById('cfg-storage-bucket').value.trim() || `${projectId}.firebasestorage.app`;
-                const appId = document.getElementById('cfg-app-id').value.trim();
-
-                const newConfig = { apiKey, projectId, authDomain, storageBucket, appId };
-                saveFirebaseConfig(newConfig);
-                this.configModal.classList.add('hidden');
-
-                // 重新載入以套用 Firebase 連線
-                this.showToast('已儲存設定！正在重新整理連線...', 'success');
-                setTimeout(() => window.location.reload(), 600);
-            };
-
-            // 重設按鈕
-            const resetCfgBtn = document.getElementById('reset-config-btn');
-            if (resetCfgBtn) {
-                resetCfgBtn.onclick = () => {
-                    if (confirm('確定要清除儲存的設定還原為預設專案嗎？')) {
-                        resetFirebaseConfig();
-                        window.location.reload();
-                    }
-                };
-            }
-        }
-
         // 彈窗關閉按鈕通配
         document.querySelectorAll('.close-modal-btn').forEach(btn => {
             btn.onclick = () => {
                 this.taskModal.classList.add('hidden');
                 this.listModal.classList.add('hidden');
-                this.configModal.classList.add('hidden');
             };
         });
     }
@@ -689,16 +604,6 @@ class App {
             opt.textContent = `${m.displayName}${m.uid === this.currentUser?.uid ? ' (我自己)' : ''}`;
             select.appendChild(opt);
         });
-    }
-
-    openConfigModal() {
-        const cfg = getFirebaseConfig();
-        document.getElementById('cfg-api-key').value = cfg.apiKey || '';
-        document.getElementById('cfg-project-id').value = cfg.projectId || 'my-to-do-list-1e32d';
-        document.getElementById('cfg-auth-domain').value = cfg.authDomain || 'my-to-do-list-1e32d.firebaseapp.com';
-        document.getElementById('cfg-storage-bucket').value = cfg.storageBucket || 'my-to-do-list-1e32d.firebasestorage.app';
-        document.getElementById('cfg-app-id').value = cfg.appId || '';
-        this.configModal.classList.remove('hidden');
     }
 
     showToast(message, type = 'info') {
